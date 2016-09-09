@@ -68,16 +68,18 @@ namespace CrawlNewsComments
                 HtmlNode rootNode = doc.DocumentNode;
 
                 //Get top 1 heading list
-                this.GetHeadingNewsList(rootNode, newsList);
+                //this.GetHeadingNewsList(rootNode, newsList);
 
                 //Get 2nd heading list
-                this.GetHeadingNewsList(rootNode, newsList, "//div[@id='headingNews']/div[@class='hdNews hasPic cf']");
+                //this.GetHeadingNewsList(rootNode, newsList, "//div[@id='headingNews']/div[@class='hdNews hasPic cf']");
 
-                //Get top news in main page
-                this.GetHotNewsList(rootNode, newsList);
+                //Get top news in main page with one pic
+                this.GetHotNewsList(rootNode, newsList, 
+                    "//div[@class='item major']/div[@class='Q-tpList']");
 
-                //Get hot top new in main page
-                this.GetHotNewsList(rootNode, newsList, "//div[@class='Q-pList']");
+                //Get hot top new in main page with multi pics
+                this.GetHotNewsList(rootNode, newsList, 
+                    "//div[@class='item major']/div[@class='Q-pList']");
             }
 
             return newsList.GroupBy(n => n.BaseUrl).Select(g => g.First()).ToList() as IList<NewsItem>;  //Distinct news
@@ -130,7 +132,7 @@ namespace CrawlNewsComments
         {
             if (string.IsNullOrEmpty(xpathHotNews))
             {
-                xpathHotNews = "//div[@class='Q-tpList']/div[@class='Q-tpWrap']";
+                xpathHotNews = "//div[@class='news']/div[@class='Q-tpList']/div[@class='Q-tpWrap']";
             }
             HtmlNodeCollection newsCollection = rootNode.SelectNodes(xpathHotNews);
             if (null == newsCollection)
@@ -140,7 +142,7 @@ namespace CrawlNewsComments
 
             foreach (HtmlNode wraperNode in newsCollection)
             {
-                NewsItem item = GetGeneralNewsInfo(wraperNode);
+                NewsItem item = GetGeneralNewsInfo(wraperNode, xpathSummary:null);
                 if (null != item)
                 {
                     item.Comments = GetComments(item) as List<Comment>;
@@ -151,9 +153,9 @@ namespace CrawlNewsComments
         }
 
         private NewsItem GetGeneralNewsInfo(HtmlNode wraperNode,
-            string xpathNews = "./em/span/span/a",
+            string xpathNews = ".//em/a",
             string xpathSummary = "./p[@class='l22']",
-            string xpathCommentState = "./div[@class='btns']/a[@class='discuzBtn']")
+            string xpathCommentState = ".//div[@class='st']/div[@class='btns']/a[@class='discuzBtn']")
         {
             HtmlNode newsNode = wraperNode.SelectSingleNode(xpathNews);
             string newsUrl = null == newsNode ? string.Empty : newsNode.Attributes["href"].Value;
